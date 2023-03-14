@@ -6,7 +6,7 @@ name: CI open and manual
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   pull_request:
-    types: [opened]
+    types: ["opened"]
     branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
