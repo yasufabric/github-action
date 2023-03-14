@@ -1,2 +1,2 @@
 # github-action
-test opened pull request
+1st test opened pull request
