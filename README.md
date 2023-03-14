@@ -1,2 +1,2 @@
 # github-action
-6th test with draft pull request
+7th test with draft pull request
