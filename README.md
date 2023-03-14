@@ -1,2 +1,2 @@
 # github-action
-test
+test open pull request
