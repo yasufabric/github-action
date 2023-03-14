@@ -1,2 +1,2 @@
 # github-action
-1st test opened pull request
+2nd test with draft pull request
