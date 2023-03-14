@@ -1,9 +1,6 @@
 name: Ignore Draft Pull request
 run-name: ${{ github.actor }} is testing out GitHub Actions for pull request 🚀
 on:
-    push:
-        branches:
-            - main
     pull_request:
         types:
             - opened
