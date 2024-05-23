@@ -1,0 +1,47 @@
+name: Create Pull Requests for base/ Branches
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Fetch only necessary branches
+        run: git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
+
+      - name: List base/ branches
+        id: list_branches
+        run: |
+          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||')
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
+
+      - name: Check if develop was updated by master merge
+        run: |
+          if git log origin/develop..HEAD --oneline | grep -q 'Merge branch 'master''; then
+            echo "Master has been merged into develop"
+            echo "merge_detected=true" >> $GITHUB_ENV
+          else
+            echo "No merge detected"
+            echo "merge_detected=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create Pull Requests
+        if: env.merge_detected == 'true'
+        run: |
+          for branch in $(echo ${{ env.branches }} | tr " " "\n"); do
+            TARGET_BRANCH="${branch}"
+            PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
+            PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
+            gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branches: ${{ env.branches }}
+          merge_detected: ${{ env.merge_detected }}
