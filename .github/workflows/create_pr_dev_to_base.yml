@@ -23,12 +23,11 @@ jobs:
           echo "branches=$BRANCHES" >> $GITHUB_ENV
 
       - name: Check if develop was updated by master merge
+        id: check_merge
         run: |
           if git log origin/develop..HEAD --oneline | grep -q 'Merge branch 'master''; then
-            echo "Master has been merged into develop"
             echo "merge_detected=true" >> $GITHUB_ENV
           else
-            echo "No merge detected"
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
 
