@@ -13,8 +13,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch only necessary branches
-        run: git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
+      - name: Fetch all branches
+        run: git fetch --all
 
       - name: List base/ branches
         id: list_branches
