@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch only necessary branches
-        run: git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*' && git fetch origin develop master
+        run: git fetch --all
 
       - name: List base/ branches
         id: list_branches
