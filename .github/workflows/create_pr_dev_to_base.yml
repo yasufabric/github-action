@@ -13,8 +13,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch all branches
-        run: git fetch --all
+      - name: Fetch only necessary branches
+        run: git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*' && git fetch origin develop master
 
       - name: List base/ branches
         id: list_branches
@@ -22,20 +22,14 @@ jobs:
           BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||')
           echo "branches=$BRANCHES" >> $GITHUB_ENV
 
-      - name: Check if develop was updated by master merge
+      - name: Check if develop contains master
         id: check_merge
         run: |
-          echo "Checking for merge commits from master to develop..."
-          git log origin/develop --oneline -n 10
-          echo "Git log output:"
-          git log origin/develop --oneline -n 10 # デバッグ用出力
-          if git log origin/develop --oneline -n 10 | grep -q 'Merge branch 'master''; then
+          if [ "$(git merge-base develop master)" = "$(git rev-parse master)" ]; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
-          echo "Contents of $GITHUB_ENV:"
-          cat $GITHUB_ENV # デバッグ用出力
 
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
