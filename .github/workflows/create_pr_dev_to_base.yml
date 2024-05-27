@@ -33,6 +33,11 @@ jobs:
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
 
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
         run: |
@@ -43,6 +48,6 @@ jobs:
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.GH_PAT }}
           branches: ${{ env.branches }}
           merge_detected: ${{ env.merge_detected }}
