@@ -27,7 +27,7 @@ jobs:
       - name: Check if develop contains master
         id: check_merge
         run: |
-          if [ "git merge-base --is-ancestor master develop" ]; then
+          if git merge-base --is-ancestor master develop; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
             echo "merge_detected=false" >> $GITHUB_ENV
