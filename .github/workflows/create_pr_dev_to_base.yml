@@ -23,8 +23,8 @@ jobs:
       - name: List base/ branches
         id: list_branches
         run: |
-          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||')
-          echo "branches=$BRANCHES" >> $GITHUB_ENV
+          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
+          echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
       - name: Check if develop contains master
         id: check_merge
@@ -35,10 +35,15 @@ jobs:
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
 
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
         run: |
-          for branch in $(echo ${{ env.branches }} | tr " " "\n"); do
+          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
             TARGET_BRANCH="${branch}"
             PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
             PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
