@@ -35,11 +35,6 @@ jobs:
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
 
-      - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
         run: |
