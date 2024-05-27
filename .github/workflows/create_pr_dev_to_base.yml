@@ -32,6 +32,7 @@ jobs:
           else
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
+          echo "merge_detected=$(cat $GITHUB_ENV | grep merge_detected)" # デバッグ用出力
 
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
