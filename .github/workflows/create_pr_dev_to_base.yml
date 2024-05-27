@@ -27,6 +27,8 @@ jobs:
         run: |
           echo "Checking for merge commits from master to develop..."
           git log origin/develop..HEAD --oneline
+          echo "Git log output:"
+          git log origin/develop..HEAD --oneline # デバッグ用出力
           if git log origin/develop..HEAD --oneline | grep -q 'Merge branch 'master''; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
