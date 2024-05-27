@@ -25,6 +25,8 @@ jobs:
       - name: Check if develop was updated by master merge
         id: check_merge
         run: |
+          echo "Checking for merge commits from master to develop..."
+          git log origin/develop..HEAD --oneline
           if git log origin/develop..HEAD --oneline | grep -q 'Merge branch 'master''; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
