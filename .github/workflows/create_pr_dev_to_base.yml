@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Fetch necessary branches
         run: |
@@ -23,8 +23,8 @@ jobs:
       - name: List base/ branches
         id: list_branches
         run: |
-          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||')
-          echo "branches=$BRANCHES" >> $GITHUB_ENV
+          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
+          echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
       - name: Check if develop contains master
         id: check_merge
@@ -38,13 +38,13 @@ jobs:
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
         run: |
-          for branch in $(echo ${{ env.branches }} | tr " " "\n"); do
+          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
             TARGET_BRANCH="${branch}"
             PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
             PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           branches: ${{ env.branches }}
           merge_detected: ${{ env.merge_detected }}
