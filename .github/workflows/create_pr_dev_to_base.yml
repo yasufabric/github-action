@@ -13,8 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch only necessary branches
-        run: git fetch --all
+      - name: Fetch necessary branches
+        run: |
+          git fetch origin develop master
+          git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
 
       - name: List base/ branches
         id: list_branches
@@ -25,7 +27,7 @@ jobs:
       - name: Check if develop contains master
         id: check_merge
         run: |
-          if [ "$(git merge-base develop master)" = "$(git rev-parse master)" ]; then
+          if [ "$(git merge-base origin/develop origin/master)" = "$(git rev-parse origin/master)" ]; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
             echo "merge_detected=false" >> $GITHUB_ENV
