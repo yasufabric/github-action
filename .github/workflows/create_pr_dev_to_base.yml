@@ -1,5 +1,4 @@
 name: Create Pull Requests for base/ Branches
-run-name: create PRs from develop to base branches
 
 on:
   push:
@@ -21,11 +20,17 @@ jobs:
           git fetch origin develop master
           git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
 
-      - name: Check if master is merged into develop
+      - name: Check if latest commit is a merge from master
         id: check_merge
         run: |
-          if git merge-base --is-ancestor origin/master origin/develop; then
-            echo "merge_detected=true" >> $GITHUB_ENV
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B origin/develop)
+          MASTER_LAST_COMMIT=$(git rev-parse origin/master)
+          if [[ "$LAST_COMMIT_MSG" =~ "Merge branch 'master'" ]]; then
+            if git merge-base --is-ancestor origin/master origin/develop; then
+              echo "merge_detected=true" >> $GITHUB_ENV
+            else
+              echo "merge_detected=false" >> $GITHUB_ENV
+            fi
           else
             echo "merge_detected=false" >> $GITHUB_ENV
           fi
