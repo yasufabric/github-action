@@ -21,12 +21,10 @@ jobs:
           git fetch origin develop master
           git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
 
-      - name: Check if the latest commit on develop is from master
+      - name: Check if master is merged into develop
         id: check_merge
         run: |
-          DEVELOP_LAST_COMMIT=$(git rev-parse origin/develop)
-          MASTER_LAST_COMMIT=$(git rev-parse origin/master)
-          if [ "$DEVELOP_LAST_COMMIT" = "$MASTER_LAST_COMMIT" ]; then
+          if git merge-base --is-ancestor origin/master origin/develop; then
             echo "merge_detected=true" >> $GITHUB_ENV
           else
             echo "merge_detected=false" >> $GITHUB_ENV
