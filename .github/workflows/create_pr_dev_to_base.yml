@@ -20,13 +20,20 @@ jobs:
           git fetch origin develop master
           git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
 
-      - name: Check if latest commit is a merge from master
+      - name: Check if the latest commit on develop is a merge commit from master
         id: check_merge
         run: |
-          LAST_COMMIT_MSG=$(git log -1 --pretty=%B origin/develop)
-          MASTER_LAST_COMMIT=$(git rev-parse origin/master)
-          if [[ "$LAST_COMMIT_MSG" =~ "Merge branch 'master'" ]]; then
-            if git merge-base --is-ancestor origin/master origin/develop; then
+          # Get the latest commit on develop
+          DEVELOP_LAST_COMMIT=$(git rev-parse origin/develop)
+          # Get the parents of the latest commit
+          PARENT_COMMITS=$(git rev-list --parents -n 1 $DEVELOP_LAST_COMMIT)
+          # Check if it's a merge commit (has two parents)
+          if [ $(echo $PARENT_COMMITS | wc -w) -eq 3 ]; then
+            # Get the second parent (the first parent is the develop branch itself)
+            SECOND_PARENT=$(echo $PARENT_COMMITS | awk '{print $3}')
+            # Check if the second parent is the latest commit of master
+            MASTER_LAST_COMMIT=$(git rev-parse origin/master)
+            if [ "$SECOND_PARENT" = "$MASTER_LAST_COMMIT" ]; then
               echo "merge_detected=true" >> $GITHUB_ENV
             else
               echo "merge_detected=false" >> $GITHUB_ENV
