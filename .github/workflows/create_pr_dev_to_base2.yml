@@ -15,11 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for all branches
 
-      - name: List base/ branches
-        id: list_branches
+      - name: List base branches
+        id: list_base_branches
         run: |
           BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
