@@ -1,5 +1,4 @@
-name: create PR base <- dev if master is merged to develop
-run-name: ${{ github.actor }} is creating dev to base PR 🚀
+name: Create PR base <- develop if master is merged to develop
 
 on:
   pull_request:
