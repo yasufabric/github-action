@@ -1,0 +1,42 @@
+name: Create Pull Requests for base/ Branches 2
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+jobs:
+  create-pr:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && github.event.pull_request.head.ref == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for all branches
+
+      - name: Fetch necessary branches
+        run: |
+          git fetch origin develop master
+          git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
+
+      - name: List base/ branches
+        id: list_branches
+        run: |
+          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
+          echo "branches=${BRANCHES}" >> $GITHUB_ENV
+
+      - name: Create Pull Requests
+        run: |
+          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
+            TARGET_BRANCH="${branch}"
+            PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
+            PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
+            gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          branches: ${{ env.branches }}
