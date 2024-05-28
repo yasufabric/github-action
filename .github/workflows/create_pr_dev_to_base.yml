@@ -49,6 +49,15 @@ jobs:
           BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
+      - name: Check if develop contains master
+        id: check_merge
+        run: |
+          if git merge-base --is-ancestor origin/master origin/develop; then
+            echo "merge_detected=true" >> $GITHUB_ENV
+          else
+            echo "merge_detected=false" >> $GITHUB_ENV
+          fi
+
       - name: Create Pull Requests
         if: env.merge_detected == 'true'
         run: |
