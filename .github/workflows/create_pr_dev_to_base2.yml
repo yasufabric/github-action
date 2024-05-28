@@ -1,4 +1,4 @@
-name: Create Pull Requests for base/ Branches 2
+name: Create Pull Requests for base/ Branches
 
 on:
   pull_request:
@@ -17,11 +17,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history for all branches
-
-      - name: Fetch necessary branches
-        run: |
-          git fetch origin develop master
-          git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
 
       - name: List base/ branches
         id: list_branches
