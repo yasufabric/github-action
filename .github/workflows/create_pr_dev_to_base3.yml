@@ -1,4 +1,5 @@
 name: Create PR base <- develop if master is merged to develop
+run-name: ${{ github.actor }} is creating dev to base PR 🚀
 
 on:
   pull_request:
@@ -15,13 +16,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: List base branches
+      - name: List active base branches
         id: list_base_branches
         run: |
-          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%dT%H:%M:%SZ")
+          BRANCHES=$(gh api repos/${{ github.repository }}/branches | jq -r '.[] | select(.name | startswith("base/")) | select(.commit.committer.date > "'$PAST_DATE'") | .name')
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
       - name: Create Pull Requests to base branches
