@@ -1,0 +1,38 @@
+name: Create PR base <- develop if master is merged to develop
+run-name: ${{ github.actor }} is creating dev to base PR 🚀
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+jobs:
+  create-pr:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && github.event.pull_request.head.ref == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: List active base branches
+        id: list_base_branches
+        run: |
+          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%dT%H:%M:%SZ")
+          BRANCHES=$(gh api repos/${{ github.repository }}/branches | jq -r '.[] | select(.name | startswith("base/")) | select(.commit.committer.date > "'$PAST_DATE'") | .name')
+          echo "branches=${BRANCHES}" >> $GITHUB_ENV
+
+      - name: Create Pull Requests to base branches
+        run: |
+          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
+            TARGET_BRANCH="${branch}"
+            PR_TITLE="${TARGET_BRANCH} <- develop"
+            PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
+            gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          branches: ${{ env.branches }}
