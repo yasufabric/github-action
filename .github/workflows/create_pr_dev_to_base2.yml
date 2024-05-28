@@ -1,4 +1,4 @@
-name: Create Pull Requests for base/ Branches
+name: create PR base <- dev if master is merged to develop
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: List base branches
@@ -22,12 +22,12 @@ jobs:
           BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
-      - name: Create Pull Requests
+      - name: Create Pull Requests to base branches
         run: |
           for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
             TARGET_BRANCH="${branch}"
-            PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
-            PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
+            PR_TITLE="${TARGET_BRANCH} <- develop"
+            PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
