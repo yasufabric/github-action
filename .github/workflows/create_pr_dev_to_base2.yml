@@ -1,4 +1,5 @@
 name: create PR base <- dev if master is merged to develop
+run-name: ${{ github.actor }} is creating dev to base PR 🚀
 
 on:
   pull_request:
@@ -15,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: List base branches
         id: list_base_branches
