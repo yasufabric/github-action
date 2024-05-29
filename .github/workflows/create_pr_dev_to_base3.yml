@@ -1,5 +1,4 @@
 name: Create PR base <- develop if master is merged to develop
-run-name: ${{ github.actor }} is creating dev to base PR 🚀
 
 on:
   pull_request:
@@ -10,28 +9,30 @@ on:
 
 jobs:
   create-pr:
+    # develop <- masterのマージ時のみ起動
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && github.event.pull_request.head.ref == 'master'
     runs-on: ubuntu-latest
-
+    outputs:
+      branches: ${{ steps.list_active_base_branches.outputs.branches }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List and filter active base branches
-        id: list_and_filter_base_branches
+      # base ブランチの一覧を取得 (3ヶ月以内に更新されたアクティブなbranch)
+      - name: List active base branches
+        id: list_active_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/* | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
-          echo "branches=${BRANCHES}" >> $GITHUB_ENV
+          echo "branches=${BRANCHES}" >> $GITHUB_OUTPUT
 
       - name: Create Pull Requests to base branches
         run: |
-          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
+          for branch in $(echo ${{ steps.list_active_base_branches.outputs.branches }} | tr ' ' '\n'); do
             TARGET_BRANCH="${branch}"
             PR_TITLE="${TARGET_BRANCH} <- develop"
             PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          branches: ${{ env.branches }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
