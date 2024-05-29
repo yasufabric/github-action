@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches
 
       - name: Print current date
         run: date -u
@@ -28,13 +30,12 @@ jobs:
       - name: List all base branches with commit dates
         run: |
           echo "Listing all base branches with commit dates:"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ || echo "No branches found"
+          git ls-remote --refs origin 'refs/heads/base/*' || echo "No branches found"
 
       - name: Check branch dates
         run: |
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           echo "Checking each branch's date against the past date $PAST_DATE:"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | while read -r date branch; do
+          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
             echo "Branch $branch with commit date $date"
             if [[ "$date" > "$PAST_DATE" ]]; then
               echo "Branch $branch is active (committed on $date)"
@@ -46,10 +47,9 @@ jobs:
       - name: List active base branches
         id: list_active_base_branches
         run: |
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           echo "Filtering branches updated after $PAST_DATE:"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '{print "DEBUG: Date="$1" Branch="$2; if ($1 > past_date) print $2}'
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
+          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '{print "DEBUG: Date="$1" Branch="$2; if ($1 > past_date) print $2}'
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
           echo "Filtered branches: $BRANCHES"
           echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
 
@@ -67,4 +67,3 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          branches: ${{ env.branches }}
