@@ -51,7 +51,7 @@ jobs:
           git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '{print "DEBUG: Date="$1" Branch="$2; if ($1 > past_date) print $2}'
           BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
           echo "Filtered branches: $BRANCHES"
-          echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
+          echo "branches=$(echo $BRANCHES | sed 's#refs/remotes/origin/##g' | tr '\n' ' ')" >> $GITHUB_ENV
 
       - name: Print branches from environment variable
         run: |
