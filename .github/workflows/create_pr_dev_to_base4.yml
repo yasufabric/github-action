@@ -27,11 +27,6 @@ jobs:
           echo "Past date: $PAST_DATE"
           echo "PAST_DATE=$PAST_DATE" >> $GITHUB_ENV
 
-      - name: List all base branches with commit dates
-        run: |
-          echo "Listing all base branches with commit datgit ls-remote --refs origin 'refs/heads/base/*'es:"
-           || echo "No branches found"
-
       - name: Check branch dates
         run: |
           echo "Checking each branch's date against the past date $PAST_DATE:"
