@@ -54,7 +54,7 @@ jobs:
             fi
           done | tr '\n' ' ')
           echo "Filtered branches: $BRANCHES"
-          echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
 
       - name: Print branches from environment variable
         run: |
