@@ -4,4 +4,5 @@
 
 test for checking merge event from master to develop
 master -> develop
+tests
 ```
