@@ -22,10 +22,7 @@ jobs:
         id: list_active_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          echo "Calculated past date: $PAST_DATE"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/
           BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
-          echo "Filtered branches: $BRANCHES"
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
       - name: Create Pull Requests from develop to base branches
@@ -37,5 +34,5 @@ jobs:
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           branches: ${{ env.branches }}
