@@ -15,43 +15,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all branches
-
-      - name: Print current date
-        run: date -u
-
-      - name: Calculate and print past date
-        run: |
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          echo "Past date: $PAST_DATE"
-          echo "PAST_DATE=$PAST_DATE" >> $GITHUB_ENV
-
-      - name: Check branch dates
-        run: |
-          echo "Checking each branch's date against the past date $PAST_DATE:"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
-            echo "Branch $branch with commit date $date"
-            if [[ "$date" > "$PAST_DATE" ]]; then
-              echo "Branch $branch is active (committed on $date)"
-            else
-              echo "Branch $branch is not active (committed on $date)"
-            fi
-          done
 
       - name: List active base branches
         id: list_active_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          echo "Filtering branches updated after $PAST_DATE:"
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
-          BRANCHES=$(echo "$BRANCHES" | sed 's|^origin/||' | tr '\n' ' ')
-          echo "Filtered branches: $BRANCHES"
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
           echo "branches=$BRANCHES" >> $GITHUB_ENV
-
-      - name: Print branches from environment variable
-        run: |
-          echo "Branches: ${{ env.branches }}"
 
       - name: Create Pull Requests from develop to base branches
         run: |
@@ -63,3 +33,4 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branches: ${{ env.branches }}
