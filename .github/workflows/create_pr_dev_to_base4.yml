@@ -29,7 +29,7 @@ jobs:
 
       - name: Create Pull Requests from develop to base branches
         run: |
-          for branch in ${{ env.branches }}; do
+          for branch in $branches; do
             TARGET_BRANCH="${branch}"
             PR_TITLE="${TARGET_BRANCH} <- develop"
             PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
