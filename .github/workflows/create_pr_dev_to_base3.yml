@@ -17,12 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List active base branches
-        id: list_base_branches
+      - name: List and filter active base branches
+        id: list_and_filter_base_branches
         run: |
-          CURRENT_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%dT%H:%M:%SZ")
-          BRANCHES=$(gh api repos/${{ github.repository }}/branches | jq -r '.[] | select(.name | startswith("base/")) | select(.commit.committer.date > "'$PAST_DATE'") | .name')
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/* | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
       - name: Create Pull Requests to base branches
