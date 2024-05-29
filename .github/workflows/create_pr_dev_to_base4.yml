@@ -17,19 +17,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Calculate and print past date
-        run: |
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          echo "Past date: $PAST_DATE"
-          echo "PAST_DATE=$PAST_DATE" >> $GITHUB_ENV
+        with:
+          fetch-depth: 0
 
       - name: List active base branches
         id: list_active_base_branches
         run: |
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           echo "Filtering branches updated after $PAST_DATE:"
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
-          BRANCHES=$(echo "$BRANCHES" | sed 's|^origin/||' | tr '\n' ' ')
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
+          echo "Filtered branches: $BRANCHES"
           echo "branches=$BRANCHES" >> $GITHUB_ENV
 
       - name: Create Pull Requests from develop to base branches
