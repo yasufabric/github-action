@@ -17,14 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # base ブランチの一覧を取得 (3ヶ月以内に更新されたアクティブなbranch)
-      - name: List active base branches
-        id: list_active_base_branches
+      - name: List base branches
+        run: |
+          echo "Listing all base branches:"
+          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/*
+
+      - name: List and filter active base branches
+        id: list_and_filter_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           echo "Calculated past date: $PAST_DATE"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/*
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/* | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
+          ALL_BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/*)
+          echo "All branches:"
+          echo "$ALL_BRANCHES"
+          BRANCHES=$(echo "$ALL_BRANCHES" | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
           echo "Filtered branches: $BRANCHES"
           echo "branches=${BRANCHES}" >> $GITHUB_ENV
 
