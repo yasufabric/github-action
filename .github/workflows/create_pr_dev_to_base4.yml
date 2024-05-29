@@ -11,8 +11,6 @@ jobs:
   create-pr:
     if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && github.event.pull_request.head.ref == 'master'
     runs-on: ubuntu-latest
-    env:
-      ACTIVE_DATE: 1
 
     steps:
       - name: Checkout
@@ -23,7 +21,7 @@ jobs:
       - name: List active base branches
         id: list_active_base_branches
         run: |
-          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
+          PAST_DATE=$(date -u -d "-1 day" +"%Y-%m-%d")
           echo "Filtering branches updated after $PAST_DATE:"
           BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
           echo "Filtered branches: $BRANCHES"
