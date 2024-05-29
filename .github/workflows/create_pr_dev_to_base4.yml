@@ -20,7 +20,7 @@ jobs:
       - name: Print current date
         run: date -u
 
-      # Debug: Calculate and print the past date using Python
+      # Debug: Calculate and print the past date
       - name: Calculate and print past date
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
@@ -30,11 +30,12 @@ jobs:
       # Debug: List all base branches with commit dates
       - name: List all base branches with commit dates
         run: |
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | tee /dev/tty
+          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/
 
       # Debug: Check each branch's date against the past date
       - name: Check branch dates
         run: |
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
           git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | while read -r date branch; do
             if [[ "$date" > "$PAST_DATE" ]]; then
               echo "Branch $branch is active (committed on $date)"
@@ -48,14 +49,13 @@ jobs:
         id: list_active_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | tee /dev/tty
           BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
           echo "Filtered branches: $BRANCHES"
           echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
 
       # Debug: Print the branches from the environment variable
       - name: Print branches from environment variable
-        run: 'echo "Branches: ${{ env.branches }}"'
+        run: "echo 'Branches: ${{ env.branches }}'"
 
       # Create Pull Requests from develop to base branches
       - name: Create Pull Requests from develop to base branches
