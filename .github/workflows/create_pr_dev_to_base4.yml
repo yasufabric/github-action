@@ -55,7 +55,7 @@ jobs:
 
       # Debug: Print the branches from the environment variable
       - name: Print branches from environment variable
-        run: echo "Branches: ${{ env.branches }}"
+        run: 'echo "Branches: ${{ env.branches }}"'
 
       # Create Pull Requests from develop to base branches
       - name: Create Pull Requests from develop to base branches
