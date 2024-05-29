@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all branches
+          fetch-depth: 0 # Fetch all branches
 
       - name: Print current date
         run: date -u
@@ -32,7 +32,7 @@ jobs:
           echo "Listing all base branches with commit dates:"
           git ls-remote --refs origin 'refs/heads/base/*' || echo "No branches found"
 
-      - name: Debug: Check branch dates
+      - name: Check branch dates
         run: |
           echo "Checking each branch's date against the past date $PAST_DATE:"
           git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
