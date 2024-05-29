@@ -1,4 +1,5 @@
 name: Create PR base <- develop if master is merged to develop
+r
 
 on:
   pull_request:
@@ -22,16 +23,14 @@ jobs:
         id: list_active_base_branches
         run: |
           PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
-          echo "Filtering active branches updated after $PAST_DATE:"
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*')
-          BRANCHES=$(echo "$BRANCHES" | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
-          BRANCHES=$(echo "$BRANCHES" | sed 's|^origin/||' | tr '\n' ' ')
-          echo "Active branches: $BRANCHES"
-          echo "branches=$BRANCHES" >> $GITHUB_OUTPUT
+          echo "Filtering branches updated after $PAST_DATE:"
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
+          echo "Filtered branches: $BRANCHES"
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
 
       - name: Create Pull Requests from develop to base branches
         run: |
-          for branch in ${{ steps.list_active_base_branches.outputs.branches }}; do
+          for branch in ${{ env.branches }}; do
             TARGET_BRANCH="${branch}"
             PR_TITLE="${TARGET_BRANCH} <- develop"
             PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
@@ -39,4 +38,4 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_OUTPUT: ${{ steps.list_active_base_branches.outputs }}
+          branches: ${{ env.branches }}
