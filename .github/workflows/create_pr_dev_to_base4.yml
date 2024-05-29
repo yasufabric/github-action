@@ -29,8 +29,8 @@ jobs:
 
       - name: List all base branches with commit dates
         run: |
-          echo "Listing all base branches with commit dates:"
-          git ls-remote --refs origin 'refs/heads/base/*' || echo "No branches found"
+          echo "Listing all base branches with commit datgit ls-remote --refs origin 'refs/heads/base/*'es:"
+           || echo "No branches found"
 
       - name: Check branch dates
         run: |
@@ -48,13 +48,11 @@ jobs:
         id: list_active_base_branches
         run: |
           echo "Filtering branches updated after $PAST_DATE:"
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
-            if [[ "$date" > "$PAST_DATE" ]]; then
-              echo "${branch#refs/remotes/origin/}"
-            fi
-          done | tr '\n' ' ')
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' refs/remotes/origin/base/ | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
+
           echo "Filtered branches: $BRANCHES"
-          echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
 
       - name: Print branches from environment variable
         run: |
