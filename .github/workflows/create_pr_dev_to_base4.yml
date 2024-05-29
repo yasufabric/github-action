@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all branches
+          fetch-depth: 0  # Fetch all branches
 
       - name: Print current date
         run: date -u
@@ -32,7 +32,7 @@ jobs:
           echo "Listing all base branches with commit dates:"
           git ls-remote --refs origin 'refs/heads/base/*' || echo "No branches found"
 
-      - name: Check branch dates
+      - name: Debug: Check branch dates
         run: |
           echo "Checking each branch's date against the past date $PAST_DATE:"
           git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
@@ -48,10 +48,13 @@ jobs:
         id: list_active_base_branches
         run: |
           echo "Filtering branches updated after $PAST_DATE:"
-          git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '{print "DEBUG: Date="$1" Branch="$2; if ($1 > past_date) print $2}'
-          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}')
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | while read -r date branch; do
+            if [[ "$date" > "$PAST_DATE" ]]; then
+              echo "${branch#refs/remotes/origin/}"
+            fi
+          done | tr '\n' ' ')
           echo "Filtered branches: $BRANCHES"
-          echo "branches=$(echo $BRANCHES | sed 's#refs/remotes/origin/##g' | tr '\n' ' ')" >> $GITHUB_ENV
+          echo "branches=$(echo $BRANCHES | tr '\n' ' ')" >> $GITHUB_ENV
 
       - name: Print branches from environment variable
         run: |
@@ -59,7 +62,7 @@ jobs:
 
       - name: Create Pull Requests from develop to base branches
         run: |
-          for branch in $(echo ${{ env.branches }}); do
+          for branch in ${{ env.branches }}; do
             TARGET_BRANCH="${branch}"
             PR_TITLE="${TARGET_BRANCH} <- develop"
             PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
