@@ -1,5 +1,4 @@
 name: Create PR base <- develop if master is merged to develop
-r
 
 on:
   pull_request:
