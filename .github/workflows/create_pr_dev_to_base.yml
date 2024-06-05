@@ -33,7 +33,7 @@ jobs:
             TARGET_BRANCH="${branch}"
             PR_TITLE="${TARGET_BRANCH} <- develop"
             PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
-            gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
+            gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}" -d
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT}}
