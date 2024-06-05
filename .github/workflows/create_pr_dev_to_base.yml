@@ -1,63 +1,39 @@
-name: Create Pull Requests for base/ Branches
+name: Create PR base <- develop if master is merged to develop
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - develop
 
 jobs:
   create-pr:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && github.event.pull_request.head.ref == 'master'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for all branches
+          fetch-depth: 0
 
-      - name: Fetch necessary branches
+      - name: List active base branches
+        id: list_active_base_branches
         run: |
-          git fetch origin develop master
-          git fetch origin 'refs/heads/base/*:refs/remotes/origin/base/*'
+          PAST_DATE=$(date -u -d "-3 months" +"%Y-%m-%d")
+          echo "Filtering branches updated after $PAST_DATE:"
+          BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(committerdate:short) %(refname:short)' 'refs/remotes/origin/base/*' | awk -v past_date="$PAST_DATE" '$1 > past_date {print $2}' | sed 's|^origin/||' | tr '\n' ' ')
+          echo "Filtered branches: $BRANCHES"
+          echo "branches=$BRANCHES" >> $GITHUB_ENV
 
-      - name: Check if the latest commit on develop is a merge commit from master
-        id: check_merge
+      - name: Create Pull Requests from develop to base branches
         run: |
-          # Get the latest commit on develop
-          DEVELOP_LAST_COMMIT=$(git rev-parse origin/develop)
-          # Get the parents of the latest commit
-          PARENT_COMMITS=$(git rev-list --parents -n 1 $DEVELOP_LAST_COMMIT)
-          # Check if it's a merge commit (has two parents)
-          if [ $(echo $PARENT_COMMITS | wc -w) -eq 3 ]; then
-            # Get the second parent (the first parent is the develop branch itself)
-            SECOND_PARENT=$(echo $PARENT_COMMITS | awk '{print $3}')
-            # Check if the second parent is the latest commit of master
-            MASTER_LAST_COMMIT=$(git rev-parse origin/master)
-            if [ "$SECOND_PARENT" = "$MASTER_LAST_COMMIT" ]; then
-              echo "merge_detected=true" >> $GITHUB_ENV
-            else
-              echo "merge_detected=false" >> $GITHUB_ENV
-            fi
-          else
-            echo "merge_detected=false" >> $GITHUB_ENV
-          fi
-
-      - name: List base/ branches
-        id: list_branches
-        run: |
-          BRANCHES=$(git branch -r | grep 'origin/base/' | sed 's|origin/||' | tr '\n' ' ')
-          echo "branches=${BRANCHES}" >> $GITHUB_ENV
-
-      - name: Create Pull Requests
-        if: env.merge_detected == 'true'
-        run: |
-          for branch in $(echo ${{ env.branches }} | tr ' ' '\n'); do
+          for branch in $branches; do
             TARGET_BRANCH="${branch}"
-            PR_TITLE="Auto PR: develop to ${TARGET_BRANCH}"
-            PR_BODY="This is an automated pull request created from the develop branch to the ${TARGET_BRANCH} branch."
+            PR_TITLE="${TARGET_BRANCH} <- develop"
+            PR_BODY="Auto PR ${TARGET_BRANCH} <- develop"
             gh pr create -B "${TARGET_BRANCH}" -H develop --title "${PR_TITLE}" --body "${PR_BODY}" || echo "Failed to create PR for ${TARGET_BRANCH}"
           done
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          branches: ${{ env.branches }}
-          merge_detected: ${{ env.merge_detected }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT}}
